@@ -1,0 +1,11 @@
+{
+  "name": "rgb-proxy-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@utexo/rgb-lib": "^0.3.0-beta.14"
+  },
+  "optionalDependencies": {
+    "@utexo/rgb-lib-linux-x64": "^0.3.0-beta.14"
+  }
+}

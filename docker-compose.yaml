@@ -1,0 +1,57 @@
+services:
+  bitcoind:
+    container_name: bitcoind
+    image: registry.gitlab.com/hashbeam/docker/bitcoind:30.2
+    command:
+      - -regtest
+      - -rpcuser=user
+      - -rpcpassword=password
+      - -rpcallowip=0.0.0.0/0
+      - -rpcbind=0.0.0.0
+      - -fallbackfee=0.0002
+
+  electrs:
+    container_name: electrs
+    image: registry.gitlab.com/hashbeam/docker/electrs:0.11.0
+    depends_on:
+      - bitcoind
+    ports:
+      - "50001:50001"
+
+  esplora:
+    container_name: esplora
+    build:
+      context: ./esplora
+      dockerfile: ./Dockerfile.notor
+    command: /srv/explorer/run.sh bitcoin-regtest explorer
+    environment:
+      - DEBUG=verbose
+      - NO_PRECACHE=1
+      - NO_ADDRESS_SEARCH=1
+      - NO_REGTEST_MINING=1
+    ports:
+      - "8094:80"
+
+  proxy:
+    container_name: proxy
+    build:
+      context: ../../rgb-proxy-server/offline-receiver-consignment-path-fix
+      dockerfile: Dockerfile
+    depends_on:
+      - electrs
+    environment:
+      - INDEXER_URL=tcp://electrs:50001
+      - BITCOIN_NETWORK=Regtest
+      - VALIDATION_DELAY_MS=3000
+    ports:
+      - "3000:3000"
+
+  e2e:
+    container_name: e2e
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    depends_on:
+      - proxy
+    profiles:
+      - e2e
