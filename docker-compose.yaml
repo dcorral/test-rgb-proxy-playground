@@ -35,14 +35,13 @@ services:
   proxy:
     container_name: proxy
     build:
-      context: ../../rgb-proxy-server/offline-receiver-consignment-path-fix
+      context: ./rgb-proxy-server
       dockerfile: Dockerfile
     depends_on:
       - electrs
     environment:
-      - INDEXER_URL=tcp://electrs:50001
+      - INDEXER_URL=${INDEXER_URL:-tcp://electrs:50001}
       - BITCOIN_NETWORK=Regtest
-      - VALIDATION_DELAY_MS=3000
     ports:
       - "3000:3000"
 
@@ -53,5 +52,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - proxy
+    environment:
+      - INDEXER_URL=${INDEXER_URL:-tcp://electrs:50001}
     profiles:
       - e2e

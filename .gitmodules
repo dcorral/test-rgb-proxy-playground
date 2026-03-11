@@ -1,0 +1,4 @@
+[submodule "rgb-proxy-server"]
+	path = rgb-proxy-server
+	url = https://github.com/dcorral/rgb-proxy-server.git
+	branch = offline-receiver-consignment-path-fix

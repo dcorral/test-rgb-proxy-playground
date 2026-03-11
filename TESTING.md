@@ -240,4 +240,4 @@ Expected output ends with `=== ALL TESTS PASSED ===` and exit code 0.
 - The automated E2E test (section 8) uses real RGB wallets for a true positive
   validation path.
 - The proxy Dockerfile uses Node 20 where `@utexo/rgb-lib-linux-x64` compiles
-  successfully (unlike local Node 24).
+  successfully

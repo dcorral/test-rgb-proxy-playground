@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const PROXY_URL = "rpc://proxy:3000/json-rpc";
 const PROXY_HTTP = "http://proxy:3000/json-rpc";
-const ELECTRS_URL = "tcp://electrs:50001";
+const INDEXER_URL = process.env.INDEXER_URL || "tcp://electrs:50001";
 const BITCOIND_URL = "http://bitcoind:18443/wallet/miner";
 const BITCOIND_AUTH =
   "Basic " + Buffer.from("user:password").toString("base64");
@@ -114,7 +114,7 @@ async function fundWallet(wallet) {
   await mine(1);
   await sleep(2000);
 
-  const online = wallet.goOnline(false, ELECTRS_URL);
+  const online = wallet.goOnline(false, INDEXER_URL);
   console.log("  Online");
 
   await waitForBalance(wallet, online, 50000);
@@ -220,19 +220,21 @@ async function main() {
   console.log("  Consignment validated and auto-ACKed!\n");
 
   // 7. Verify receiver got the asset
-  // First refresh picks up the pending transfer, second settles it
+  // Refresh + mine cycles until the transfer settles
   console.log("Step 10: Verify receiver asset balance");
-  rcvWallet.refresh(rcvOnline, null, [], false);
-  sndWallet.refresh(sndOnline, null, [], false);
+  let rcvBalance;
+  for (let i = 0; i < 3; i++) {
+    rcvWallet.refresh(rcvOnline, null, [], false);
+    sndWallet.refresh(sndOnline, null, [], false);
 
-  await mine(1);
-  await sleep(2000);
+    rcvBalance = rcvWallet.getAssetBalance(asset.assetId);
+    console.log(`  Receiver balance (cycle ${i + 1}): ${JSON.stringify(rcvBalance)}`);
+    if (Number(rcvBalance.settled) === 100) break;
 
-  rcvWallet.refresh(rcvOnline, null, [], false);
-  sndWallet.refresh(sndOnline, null, [], false);
+    await mine(1);
+    await sleep(3000);
+  }
 
-  const rcvBalance = rcvWallet.getAssetBalance(asset.assetId);
-  console.log(`  Receiver balance: ${JSON.stringify(rcvBalance)}`);
   if (Number(rcvBalance.settled) !== 100)
     throw new Error(
       `Expected settled=100, got settled=${rcvBalance.settled}`,
